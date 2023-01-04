@@ -1,5 +1,5 @@
 import PySimpleGUI as sg
-import rsa, paillier, diffiehellman, ecc, util
+import rsa, paillier, elgamal, ecc, util
 
 def saveFile(path, content):
     with open("../keys/"+path, 'w') as file:
@@ -13,42 +13,13 @@ sg.theme("Reddit")
 layout = [
     [sg.T("M0521026 - UAS Kriptografi - ECC", font="Any 20")],
     [sg.TabGroup([[
-        sg.Tab("RSA", [
+        sg.Tab("ECC", [
             [sg.Text("Generate Keys", font="Any 10")],
-            [sg.T("P (prime)", size=(8, 1)), sg.In(key="p_val_rsa", size=(60, 1))],
-            [sg.T("Q (prime)", size=(8, 1)), sg.In(key="q_val_rsa", size=(60, 1))],
+            [sg.T("P (prime)", size=(8, 1)), sg.In(key="p_val_elgamal", size=(60, 1))],
             [sg.Text("Output Keys", font="Any 10")],
-            [sg.T("Public", size=(8, 1)), sg.In(key="public_out_rsa", size=(60, 1))],
-            [sg.T("Private", size=(8, 1)), sg.In(key="private_out_rsa", size=(60, 1))],
-        ], key="RSA"),
-        sg.Tab("Diffie-Hellman", [
-            [sg.Text("Generate Keys", font="Any 10")],
-            [sg.T("P (prime)", size=(8, 1)), sg.In(key="p_val_diffiehellman", size=(60, 1))],
-            [sg.Text("Output Keys", font="Any 10")],
-            [sg.T("Public", size=(8, 1)), sg.In(key="public_out_diffiehellman", size=(60, 1))],
-            [sg.T("Private", size=(8, 1)), sg.In(key="private_out_diffiehellman", size=(60, 1))],
-        ], key="Diffie-Hellman"),
-        sg.Tab("Paillier", [
-            [sg.Text("Generate Keys", font="Any 10")],
-            [sg.T("P (prime)", size=(8, 1)), sg.In(key="p_val_paillier", size=(60, 1))],
-            [sg.T("Q (prime)", size=(8, 1)), sg.In(key="q_val_paillier", size=(60, 1))],
-            [sg.Text("Output Keys", font="Any 10")],
-            [sg.T("Public", size=(8, 1)), sg.In(key="public_out_paillier", size=(60, 1))],
-            [sg.T("Private", size=(8, 1)), sg.In(key="private_out_paillier", size=(60, 1))],
-        ], key="Paillier"),
-        sg.Tab("ECEG", [
-            [sg.Text("Generate Keys | Equation y^2 = x^3 + ax + b mod p", font="Any 10")],
-            [   sg.T("a", size=(2, 1)), sg.In(key="a_val_eceg", size=(5, 1)),
-                sg.T("b", size=(2, 1)), sg.In(key="b_val_eceg", size=(5, 1)),
-                sg.T("p", size=(2, 1)), sg.In(key="p_val_eceg", size=(5, 1)),
-                sg.Button("GenerateElipticGroup", pad=(5, 10)),
-                sg.Text("Eliptic Group List", font="Any 10"), sg.Multiline(key="eliptic_group_list", size=(30, 3)),
-            ],
-            [sg.T("Chosen BasePoint", size=(15, 1)), sg.In(key="base_point_eceg", size=(15, 1))],
-            [sg.Text("Output Keys", font="Any 10")],
-            [sg.T("Public", size=(8, 1)), sg.In(key="public_out_eceg", size=(60, 1))],
-            [sg.T("Private", size=(8, 1)), sg.In(key="private_out_eceg", size=(60, 1))],
-        ], key="ECEG"),
+            [sg.T("Public", size=(8, 1)), sg.In(key="public_out_elgamal", size=(60, 1))],
+            [sg.T("Private", size=(8, 1)), sg.In(key="private_out_elgamal", size=(60, 1))],
+        ], key="ECC")
     ]], key="current_action")],
     [
         sg.Button("GenerateKey", pad=(5, 10)),
@@ -83,14 +54,14 @@ while True:
             else:
                 window["public_out_rsa"].update(keys["public"])
                 window["private_out_rsa"].update(keys["private"])
-        if current_mode == "Diffie-Hellman":
-            keys = diffiehellman.generateKey(int(values["p_val_diffiehellman"]))
+        if current_mode == "ECC":
+            keys = elgamal.generateKey(int(values["p_val_elgamal"]))
             if keys == None:
-                window["public_out_diffiehellman"].update("p tidak prima")
-                window["private_out_diffiehellman"].update("p tidak prima")
+                window["public_out_elgamal"].update("p tidak prima")
+                window["private_out_elgamal"].update("p tidak prima")
             else:
-                window["public_out_diffiehellman"].update(keys["public"])
-                window["private_out_diffiehellman"].update(keys["private"])
+                window["public_out_elgamal"].update(keys["public"])
+                window["private_out_elgamal"].update(keys["private"])
         if current_mode == "Paillier":
             keys = paillier.generateKey(int(values["p_val_paillier"]), int(values["q_val_paillier"]))
             if keys == None:
@@ -146,10 +117,10 @@ while True:
             key = values["key"].split(' ')
             cipher = rsa.encrypt(input, int(key[0]), int(key[1]))
             window["output_text"].update(cipher)
-        if current_mode == "Diffie-Hellman":
+        if current_mode == "ECC":
             input =  util.preprocessPlainText(str(values["input_text"]))
             key = values["key"].split(' ')
-            cipher = diffiehellman.encrypt(input, int(key[0]), int(key[1]), int(key[2]))
+            cipher = elgamal.encrypt(input, int(key[0]), int(key[1]), int(key[2]))
             window["output_text"].update(str(cipher))
         if current_mode == "Paillier":
             input =  util.preprocessPlainText(str(values["input_text"]))
@@ -178,10 +149,10 @@ while True:
             key = values["key"].split(' ')
             plain = rsa.decrypt(input, int(key[0]), int(key[1]))
             window["output_text"].update(util.decodeText(plain))
-        if current_mode == "Diffie-Hellman":
+        if current_mode == "ECC":
             input =  str(values["input_text"])
             key = values["key"].split(' ')
-            plain = diffiehellman.decrypt(input, int(key[0]), int(key[1]))
+            plain = elgamal.decrypt(input, int(key[0]), int(key[1]))
             window["output_text"].update(util.decodeText(plain))
         if current_mode == "Paillier":
             input =  str(values["input_text"])
